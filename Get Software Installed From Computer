@@ -36,7 +36,8 @@ Module Module1
                                 Try
                                     Applications.Add(CStr(sk.GetValue("DisplayName")) & " " & CStr(sk.GetValue("DisplayVersion")))
                                 Catch ex As Exception
-                                    Console.WriteLine("!!!!!! error: " & ex.Message)
+                                    Console.WriteLine("!! Unable to connect to the computer: " & ComputerName & " !!")
+                                    Console.WriteLine("Error Message: " & ex.Message)
                                 End Try
                             End If
 

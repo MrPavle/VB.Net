@@ -19,43 +19,47 @@ Module Module1
 
         For Each ComputerName As String In args
 
-            Dim uninstallKey As String = "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
+            Dim uninstallKey() As String = {"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall", "SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall"}
 
-            Try
-                Using rk As RegistryKey = RegistryKey.OpenRemoteBaseKey(RegistryHive.LocalMachine, ComputerName, RegistryView.Registry64).OpenSubKey(uninstallKey)
+            For Each key In uninstallKey
 
-                    Console.WriteLine(ComputerName)
-                    Console.WriteLine("-------------------------------------------")
+                Try
+                    Using rk As RegistryKey = RegistryKey.OpenRemoteBaseKey(RegistryHive.LocalMachine, ComputerName, RegistryView.Registry64).OpenSubKey(uninstallKey)
 
-                    Dim Applications As New List(Of String)()
+                        Console.WriteLine(ComputerName)
+                        Console.WriteLine("-------------------------------------------")
 
-                    For Each skName As String In rk.GetSubKeyNames()
-                        Using sk As RegistryKey = rk.OpenSubKey(skName)
+                        Dim Applications As New List(Of String)()
 
-                            If Not CStr(sk.GetValue("DisplayName")) = "" Then
-                                Try
-                                    Applications.Add(CStr(sk.GetValue("DisplayName")) & " " & CStr(sk.GetValue("DisplayVersion")))
-                                Catch ex As Exception
-                                    Console.WriteLine("!! Unable to connect to the computer: " & ComputerName & " !!")
-                                    Console.WriteLine("Error Message: " & ex.Message)
-                                End Try
-                            End If
+                        For Each skName As String In rk.GetSubKeyNames()
+                            Using sk As RegistryKey = rk.OpenSubKey(skName)
 
-                        End Using
-                    Next
+                                If Not CStr(sk.GetValue("DisplayName")) = "" Then
+                                    Try
+                                        Applications.Add(CStr(sk.GetValue("DisplayName")) & " " & CStr(sk.GetValue("DisplayVersion")))
+                                    Catch ex As Exception
+                                        Console.WriteLine("!! Unable to connect to the computer: " & ComputerName & " !!")
+                                        Console.WriteLine("Error Message: " & ex.Message)
+                                    End Try
+                                End If
 
-                    Applications.Sort()
-                    For Each app As String In Applications
-                        Console.WriteLine(app)
-                    Next
+                            End Using
+                        Next
 
-                End Using
+                        Applications.Sort()
+                        For Each app As String In Applications
+                            Console.WriteLine(app)
+                        Next
 
-            Catch ex As Exception
-                Console.WriteLine("!! Unable to connect to the computer: " & ComputerName & " !!")
-                Console.WriteLine("Error Message: " & ex.Message)
-            End Try
+                    End Using
 
+                Catch ex As Exception
+                    Console.WriteLine("!! Unable to connect to the computer: " & ComputerName & " !!")
+                    Console.WriteLine("Error Message: " & ex.Message)
+                End Try
+                
+            Next key
+     
         Next ComputerName
 
     End Sub

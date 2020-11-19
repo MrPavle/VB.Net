@@ -1,0 +1,123 @@
+
+Imports Microsoft.Win32
+Imports System.Net
+Module Module1
+
+    Sub Main()
+
+        Dim args() As String = Environment.GetCommandLineArgs()
+
+        If args.Count() = 0 Then
+            Console.WriteLine("Correct usage: --ComputerName <ComputerName> --GetIPAddress")
+            Console.WriteLine("Correct usage: --ComputerName <ComputerName> --GetComputerOS")
+            Console.WriteLine("Correct usage: --ComputerName <ComputerName> --GetComputerSoftwareInstalled")
+            Console.WriteLine("")
+            Environment.Exit(0)
+        End If
+
+        If Not args.Count() > 3 Then
+            Console.WriteLine("!! Missing Argument !!")
+            Console.WriteLine("Correct usage: --ComputerName <ComputerName> --GetIPAddress")
+            Console.WriteLine("Correct usage: --ComputerName <ComputerName> --GetComputerOS")
+            Console.WriteLine("Correct usage: --ComputerName <ComputerName> --GetComputerSoftwareInstalled")
+            Console.WriteLine("")
+            Environment.Exit(0)
+        End If
+
+        For index As Integer = 0 To args.Length - 1
+
+            If args(index) = "--ComputerName" Then
+
+                If args(index + 2) = "--GetIPAddress" Then
+                    GetComputerIPv4Address(args(index + 1))
+                End If
+
+                If args(index + 2) = "--GetComputerOS" Then
+                    GetComputerOS(args(index + 1))
+                End If
+
+                If args(index + 2) = "--GetComputerSoftwareInstalled" Then
+                    GetComputerSoftwareInstalled(args(index + 1))
+                End If
+
+            End If
+
+        Next
+
+        'Console.Write("Press any key to exit....")
+        'Console.ReadLine()
+
+    End Sub
+
+    Private Sub GetComputerOS(ByVal ComputerName As String)
+
+        Dim OSKey As String = "Software\Microsoft\Windows NT\CurrentVersion\"
+
+        Try
+            Using rk As RegistryKey = RegistryKey.OpenRemoteBaseKey(RegistryHive.LocalMachine, ComputerName, RegistryView.Registry64).OpenSubKey(OSKey)
+                Try
+                    Console.WriteLine(CStr(rk.GetValue("ProductName")))
+                Catch ex As Exception
+                    Console.WriteLine("Error Message: " & ex.Message)
+                End Try
+            End Using
+
+        Catch ex As Exception
+            Console.WriteLine("!! Unable to connect to the computer: " & ComputerName & " !!")
+            Console.WriteLine("Error Message: " & ex.Message)
+        End Try
+
+    End Sub
+
+    Private Sub GetComputerSoftwareInstalled(ByVal ComputerName As String)
+
+        Dim uninstallKey() As String = {"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall", "SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall"}
+
+        For Each key In uninstallKey
+
+            Try
+                Using rk As RegistryKey = RegistryKey.OpenRemoteBaseKey(RegistryHive.LocalMachine, ComputerName, RegistryView.Registry64).OpenSubKey(uninstallKey)
+
+                    Dim Applications As New List(Of String)()
+
+                    For Each skName As String In rk.GetSubKeyNames()
+                        Using sk As RegistryKey = rk.OpenSubKey(skName)
+
+                            If Not CStr(sk.GetValue("DisplayName")) = "" Then
+                                Try
+                                    Applications.Add(CStr(sk.GetValue("DisplayName")) & " " & CStr(sk.GetValue("DisplayVersion")))
+                                Catch ex As Exception
+                                    Console.WriteLine("Error Message: " & ex.Message)
+                                End Try
+                            End If
+
+                        End Using
+                    Next
+
+                    Applications.Sort()
+                    For Each app As String In Applications
+                        Console.WriteLine(app)
+                    Next
+
+                End Using
+
+            Catch ex As Exception
+                Console.WriteLine("!! Unable to connect to the computer: " & ComputerName & " !!")
+                Console.WriteLine("Error Message: " & ex.Message)
+            End Try
+
+        Next key
+
+    End Sub
+
+    Private Sub GetComputerIPv4Address(ByVal ComputerName As String)
+
+        For Each adr In System.Net.Dns.GetHostEntry(ComputerName).AddressList()
+            If (adr.AddressFamily = Sockets.AddressFamily.InterNetwork) Then
+                Console.WriteLine(adr.ToString())
+            End If
+        Next adr
+
+    End Sub
+
+End Module

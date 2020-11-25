@@ -1,51 +1,83 @@
-
 Imports Microsoft.Win32
 Imports System.Net
-Module Module1
-
+Module ServerAdministrationCLI
     Sub Main()
 
         Dim args() As String = Environment.GetCommandLineArgs()
 
-        If args.Count() = 0 Then
-            Console.WriteLine("Correct usage: --ComputerName <ComputerName> --GetIPAddress")
-            Console.WriteLine("Correct usage: --ComputerName <ComputerName> --GetComputerOS")
-            Console.WriteLine("Correct usage: --ComputerName <ComputerName> --GetComputerSoftwareInstalled")
-            Console.WriteLine("")
+        If args.Count() < 2 Then
+            Console.WriteLine(vbCrLf & "Get Info from Computer" & vbCrLf)
+            Console.WriteLine("Available Switches:")
+            Console.WriteLine("--ComputerName <computername> or --C <computername>")
+            Console.WriteLine(" If no computer specified, it will get information from local computer")
+            Console.WriteLine(" Computer must be first (because I have programmed it to come after other switches)" & vbCrLf)
+            Console.WriteLine("--GetIP   : Get IPv4 Address")
+            Console.WriteLine("--GetOS   : Get OS Name")
+            Console.WriteLine("--GetSW   : Get list of software installed")
+            Console.WriteLine("--GetCPU  : Get CPU count")
+            Console.WriteLine("--h or /? : Get command line switch help")
             Environment.Exit(0)
         End If
 
-        If Not args.Count() > 3 Then
-            Console.WriteLine("!! Missing Argument !!")
-            Console.WriteLine("Correct usage: --ComputerName <ComputerName> --GetIPAddress")
-            Console.WriteLine("Correct usage: --ComputerName <ComputerName> --GetComputerOS")
-            Console.WriteLine("Correct usage: --ComputerName <ComputerName> --GetComputerSoftwareInstalled")
-            Console.WriteLine("")
-            Environment.Exit(0)
-        End If
+        For argnumber As Integer = 1 To args.Length - 1
 
-        For index As Integer = 0 To args.Length - 1
+            If args(argnumber) = "--h" Or args(argnumber) = "/?" Then
 
-            If args(index) = "--ComputerName" Then
-
-                If args(index + 2) = "--GetIPAddress" Then
-                    GetComputerIPv4Address(args(index + 1))
-                End If
-
-                If args(index + 2) = "--GetComputerOS" Then
-                    GetComputerOS(args(index + 1))
-                End If
-
-                If args(index + 2) = "--GetComputerSoftwareInstalled" Then
-                    GetComputerSoftwareInstalled(args(index + 1))
-                End If
+                Console.WriteLine(vbCrLf & "Get Info from Computer" & vbCrLf)
+                Console.WriteLine("Available Switches:")
+                Console.WriteLine("--ComputerName <computername> or --C <computername>")
+                Console.WriteLine(" If no computer specified, it will get information from local computer")
+                Console.WriteLine(" Computer must be first (because I have programmed it to come after other switches)" & vbCrLf)
+                Console.WriteLine("--GetIP   : Get IPv4 Address")
+                Console.WriteLine("--GetOS   : Get OS Name")
+                Console.WriteLine("--GetSW   : Get list of software installed")
+                Console.WriteLine("--GetCPU  : Get CPU count")
+                Console.WriteLine("--h or /? : Get command line switch help")
+                Environment.Exit(0)
 
             End If
 
-        Next
+            If args(argnumber) = "--ComputerName" Or args(argnumber) = "--C" Then
 
-        'Console.Write("Press any key to exit....")
-        'Console.ReadLine()
+                If args(argnumber + 2) = "--GetIP" Then
+                    GetComputerIPv4Address(args(argnumber) + 1)
+                End If
+
+                If args(argnumber + 2) = "--GetOS" Then
+                    GetComputerOS(args(argnumber) + 1)
+                End If
+
+                If args(argnumber + 2) = "--GetSW" Then
+                    GetComputerSoftwareInstalled(args(argnumber) + 1)
+                End If
+
+                If args(argnumber + 2) = "--GetCPU" Then
+                    GetComputerCPU(args(argnumber) + 1)
+                End If
+
+            ElseIf Not args(argnumber) = "--ComputerName" Or args(argnumber) = "--C" Then
+
+                If args(argnumber) = "--GetIP" Then
+                    GetComputerIPv4Address(Environment.MachineName)
+                End If
+
+                If args(argnumber) = "--GetOS" Then
+                    GetComputerOS(Environment.MachineName)
+                End If
+
+                If args(argnumber) = "--GetSW" Then
+                    GetComputerSoftwareInstalled(Environment.MachineName)
+                End If
+
+                If args(argnumber) = "--GetCPU" Then
+                    GetComputerCPU(Environment.MachineName)
+                End If
+
+            Else
+                Console.WriteLine("??")
+            End If
+
+        Next
 
     End Sub
 
@@ -76,7 +108,7 @@ Module Module1
         For Each key In uninstallKey
 
             Try
-                Using rk As RegistryKey = RegistryKey.OpenRemoteBaseKey(RegistryHive.LocalMachine, ComputerName, RegistryView.Registry64).OpenSubKey(uninstallKey)
+                Using rk As RegistryKey = RegistryKey.OpenRemoteBaseKey(RegistryHive.LocalMachine, ComputerName, RegistryView.Registry64).OpenSubKey(key)
 
                     Dim Applications As New List(Of String)()
 
@@ -117,6 +149,15 @@ Module Module1
                 Console.WriteLine(adr.ToString())
             End If
         Next adr
+
+    End Sub
+
+    Private Sub GetComputerCPU(ByVal ComputerName As String)
+
+        Dim key As String = "HARDWARE\DESCRIPTION\System\CentralProcessor"
+        Dim rk As RegistryKey = RegistryKey.OpenRemoteBaseKey(RegistryHive.LocalMachine, ComputerName, RegistryView.Registry64).OpenSubKey(key)
+        Dim skName As Array = rk.GetSubKeyNames()
+        Console.WriteLine(skName.Length.ToString())
 
     End Sub
 

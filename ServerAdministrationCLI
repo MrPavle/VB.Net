@@ -4,83 +4,99 @@ Module ServerAdministrationCLI
     Sub Main()
 
         Dim args() As String = Environment.GetCommandLineArgs()
+        Dim ComputerSwitchArg As String = String.Empty
+        Dim ComputerNameArg As String = String.Empty
 
-        If args.Count() < 2 Then
-            Console.WriteLine(vbCrLf & "Get Info from Computer" & vbCrLf)
-            Console.WriteLine("Available Switches:")
-            Console.WriteLine("--ComputerName <computername> or --C <computername>")
-            Console.WriteLine(" If no computer specified, it will get information from local computer")
-            Console.WriteLine(" Computer must be first (because I haven't programmed it to come after other switches)" & vbCrLf)
-            Console.WriteLine("--GetIP   : Get IPv4 Address")
-            Console.WriteLine("--GetOS   : Get OS Name")
-            Console.WriteLine("--GetSW   : Get list of software installed")
-            Console.WriteLine("--GetCPU  : Get CPU count")
-            Console.WriteLine("--h or /? : Get command line switch help")
-            Environment.Exit(0)
+        If Not args.Length > 1 Then
+            HelpMenu()
+            Environment.Exit(1)
+        Else
+            Select Case args(1)
+                Case "--GetIP"
+                    GetComputerIPv4Address(Environment.MachineName)
+                Case "--GetOS"
+                    GetComputerOS(Environment.MachineName)
+                Case "--GetSW"
+                    GetComputerSoftwareInstalled(Environment.MachineName)
+                Case "--GetCPU"
+                    GetComputerCPU(Environment.MachineName)
+                Case "--GetUpTime"
+                    Console.WriteLine("UpTime - not available yet")
+                Case "--GetAll"
+                    Console.WriteLine("All - not available yet")
+                Case Else
+                    ComputerSwitchArg = args(1)
+            End Select
+
+            If args.Length > 2 Then
+                ComputerNameArg = args(2)
+            End If
+
         End If
 
-        For argnumber As Integer = 1 To args.Length - 1
+        If ComputerSwitchArg = "--ComputerName" Or ComputerSwitchArg = "--C" Then
 
-            If args(argnumber) = "--h" Or args(argnumber) = "/?" Then
-
-                Console.WriteLine(vbCrLf & "Get Info from Computer" & vbCrLf)
-                Console.WriteLine("Available Switches:")
-                Console.WriteLine("--ComputerName <computername> or --C <computername>")
-                Console.WriteLine(" If no computer specified, it will get information from local computer")
-                Console.WriteLine(" Computer must be first (because I haven't programmed it to come after other switches)" & vbCrLf)
-                Console.WriteLine("--GetIP   : Get IPv4 Address")
-                Console.WriteLine("--GetOS   : Get OS Name")
-                Console.WriteLine("--GetSW   : Get list of software installed")
-                Console.WriteLine("--GetCPU  : Get CPU count")
-                Console.WriteLine("--h or /? : Get command line switch help")
-                Environment.Exit(0)
-
-            End If
-
-            If args(argnumber) = "--ComputerName" Or args(argnumber) = "--C" Then
-
-                If args(argnumber + 2) = "--GetIP" Then
-                    GetComputerIPv4Address(args(argnumber) + 1)
-                End If
-
-                If args(argnumber + 2) = "--GetOS" Then
-                    GetComputerOS(args(argnumber) + 1)
-                End If
-
-                If args(argnumber + 2) = "--GetSW" Then
-                    GetComputerSoftwareInstalled(args(argnumber) + 1)
-                End If
-
-                If args(argnumber + 2) = "--GetCPU" Then
-                    GetComputerCPU(args(argnumber) + 1)
-                End If
-
-            ElseIf Not args(argnumber) = "--ComputerName" Or args(argnumber) = "--C" Then
-
-                If args(argnumber) = "--GetIP" Then
-                    GetComputerIPv4Address(Environment.MachineName)
-                End If
-
-                If args(argnumber) = "--GetOS" Then
-                    GetComputerOS(Environment.MachineName)
-                End If
-
-                If args(argnumber) = "--GetSW" Then
-                    GetComputerSoftwareInstalled(Environment.MachineName)
-                End If
-
-                If args(argnumber) = "--GetCPU" Then
-                    GetComputerCPU(Environment.MachineName)
-                End If
-
+            If ComputerNameArg = "--C" Or ComputerNameArg = "--ComputerName" Then
+                Console.WriteLine(" ** cannot use both ComputerName switches at the same time **")
+                Environment.Exit(1)
             Else
-                Console.WriteLine("??")
-            End If
 
-        Next
+                If ComputerNameArg = "--GetIP" Or ComputerNameArg = "--GetOS" Or ComputerNameArg = "--GetSW" Or ComputerNameArg = "--GetCPU" Or ComputerNameArg = "--GetUpTime" Then
+                    Console.WriteLine(" ** used a switch without a computername **")
+                    Environment.Exit(1)
+                Else
+
+                    If args.Length > 3 Then
+
+                        For arg As Integer = 3 To args.Length - 1
+
+                            Select Case args(arg)
+                                Case "--GetIP"
+                                    GetComputerIPv4Address(ComputerNameArg)
+                                Case "--GetOS"
+                                    GetComputerOS(ComputerNameArg)
+                                Case "--GetSW"
+                                    GetComputerSoftwareInstalled(ComputerNameArg)
+                                Case "--GetCPU"
+                                    GetComputerCPU(ComputerNameArg)
+                                Case "--GetUpTime"
+                                    Console.WriteLine("UpTime - not available yet")
+                                Case "--GetAll"
+                                    Console.WriteLine("All - not available yet")
+                                Case Else
+                                    Console.WriteLine(" ** no valid switch found **")
+                                    Environment.Exit(1)
+                            End Select
+
+                        Next arg
+                        Environment.Exit(0)
+                    Else
+
+                        Console.WriteLine(" ** you didnt add a switch after computername **")
+                        Environment.Exit(1)
+
+                    End If ' If args.Length > 3
+                End If     ' If ComputerNameArg = "--GetIP" Or ComputerNameArg = "--GetOS" Or ComputerNameArg = "--GetSW" Or ComputerNameArg = "--GetCPU" Or ComputerNameArg = "--GetUpTime"
+            End If         ' If ComputerNameArg = "--C" Or ComputerNameArg = "--ComputerName" Then
+
+        ElseIf ComputerSwitchArg = "--h" Or ComputerSwitchArg = "/?" Then
+            HelpMenu()
+            Environment.Exit(0)
+        End If ' If ComputerSwitchArg = "--ComputerName" Or ComputerSwitchArg = "--C"
 
     End Sub
-
+    Private Sub HelpMenu()
+        Console.WriteLine(vbCrLf & "Description: Get information from local or remote computer" & vbCrLf)
+        Console.WriteLine("Available Switches:")
+        Console.WriteLine("--ComputerName <computername> or --C <computername>")
+        Console.WriteLine("  If no computer specified and a switch is, it will get information from local computer")
+        Console.WriteLine("  Computer must be first (because I haven't programmed it to come after other " & vbCrLf & "  switches it will get local information instead)" & vbCrLf)
+        Console.WriteLine("--GetIP   : Get IPv4 Address")
+        Console.WriteLine("--GetOS   : Get OS Name")
+        Console.WriteLine("--GetSW   : Get list of software installed")
+        Console.WriteLine("--GetCPU  : Get CPU count")
+        Console.WriteLine("--h or /? : Get command line switch help")
+    End Sub
     Private Sub GetComputerOS(ByVal ComputerName As String)
 
         Dim OSKey As String = "Software\Microsoft\Windows NT\CurrentVersion\"
